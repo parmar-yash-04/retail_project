@@ -34,6 +34,9 @@ RATING_SELECTOR = ".PvbNMB span span:nth-child(1)::text"
 REVIEW_SELECTOR = ".PvbNMB span span:nth-child(3)::text"
 PRODUCT_URL_SELECTOR = "a::attr(href)"
 NEXT_PAGE_SELECTOR = "nav.iu0OAI a.jgg0SZ::attr(href)"
+FETCH_TIMEOUT_SECONDS = 90
+FETCH_RETRIES = 2
+FETCH_RETRY_DELAY_SECONDS = 5
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +130,22 @@ def _next_page_url(page) -> str | None:
     return _absolute_url(next_url)
 
 
+def _fetch_page(url: str):
+    try:
+        return Fetcher.get(
+            url,
+            stealthy_headers=True,
+            follow_redirects=True,
+            timeout=FETCH_TIMEOUT_SECONDS,
+            retries=FETCH_RETRIES,
+            retry_delay=FETCH_RETRY_DELAY_SECONDS,
+        )
+    except Exception as exc:
+        logger.error("Failed to fetch Flipkart page: %s", url)
+        logger.error("Fetch error: %s", exc)
+        return None
+
+
 def scrape_flipkart_products(
     start_url: str = DEFAULT_SEARCH_URL,
     *,
@@ -134,7 +153,6 @@ def scrape_flipkart_products(
     max_pages: int | None = None,
     delay_seconds: float = 2.0,
 ) -> list[ProductSnapshot]:
-    fetcher = Fetcher()
     scraped: list[ProductSnapshot] = []
     current_url: str | None = start_url
     page_number = 1
@@ -144,7 +162,11 @@ def scrape_flipkart_products(
             break
 
         logger.info("Scraping Flipkart page %s: %s", page_number, current_url)
-        page = fetcher.get(current_url, stealthy_headers=True, follow_redirects=True)
+        page = _fetch_page(current_url)
+        if page is None:
+            logger.warning("Stopping scrape because page %s could not be fetched", page_number)
+            break
+
         captured_at = datetime.utcnow()
 
         page_products = [
@@ -183,6 +205,10 @@ def scrape_and_store(
         max_pages=max_pages,
         delay_seconds=delay_seconds,
     )
+
+    if not products:
+        logger.warning("No Flipkart products scraped; skipping database insert")
+        return 0
 
     with get_connection() as conn:
         return save_product_snapshots(conn, products)
