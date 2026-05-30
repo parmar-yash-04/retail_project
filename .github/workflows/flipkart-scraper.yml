@@ -23,7 +23,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Install Playwright browsers
-        run: python -m playwright install chromium
+        run: python -m playwright install --with-deps chromium
+
+      - name: Verify scraper imports
+        run: python -c "from scrapling.fetchers import Fetcher; from src.scraper.flipkart_scraper import scrape_and_store; print('imports ok')"
 
       - name: Run Flipkart scraper
         env:
