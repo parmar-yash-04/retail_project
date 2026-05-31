@@ -32,3 +32,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python scrape_runner.py --max-pages 30
+
+      - name: Clean scraped snapshots
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python clean_runner.py --limit 10000
