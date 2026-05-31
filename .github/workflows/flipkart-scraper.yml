@@ -37,3 +37,8 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python clean_runner.py --limit 10000
+
+      - name: Build product features
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python feature_runner.py

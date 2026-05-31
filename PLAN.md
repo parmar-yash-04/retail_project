@@ -272,7 +272,7 @@ EDA goals:
 
 ### Step 4. Feature Engineering
 
-Create:
+Implemented:
 
 ```text
 src/feature_engineering/build_features.py
@@ -297,6 +297,18 @@ discount_change
 review_growth
 snapshot_count
 days_observed
+```
+
+Current feature table:
+
+```text
+product_features
+```
+
+Current verified result:
+
+```text
+product_features: 408
 ```
 
 ### Step 5. Rule-Based Trend Score
@@ -425,7 +437,7 @@ Dashboard
 The next best implementation task is:
 
 ```text
-Update GitHub Actions to run clean_runner.py after scrape_runner.py.
+Build a rule-based trend score from product_features.
 ```
 
-This will make the raw and clean tables update automatically every scheduled run.
+This will create the first usable ranking signal before ML.
